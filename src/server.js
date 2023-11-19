@@ -1,12 +1,15 @@
 require('dotenv').config();
 const Hapi = require('@hapi/hapi');
-const notes = require('./api/notes');
-const NotesService = require('./services/postgres/PostgreService');
-const NotesValidator = require('./validator/notes');
+const handler = require('./api/handler');
+const PayloadValidator = require('./validator');
 const ClientError = require('./exceptions/ClientError');
+const AlbumService = require('./services/postgres/album_service');
+const SongService = require('./services/postgres/song_service');
 
 const init = async () => {
-  const notesService = new NotesService();
+  const albumService = new AlbumService();
+  const songService = new SongService();
+
   const server = Hapi.server({
     port: process.env.PORT,
     host: process.env.HOST,
@@ -15,32 +18,36 @@ const init = async () => {
         origin: ['*'],
       },
     },
+    debug: { request: ['error'] },
   });
 
   await server.register({
-    plugin: notes,
+    plugin: handler,
     options: {
-      service: notesService,
-      validator: NotesValidator,
+      albumService,
+      songService,
+      validator: PayloadValidator,
     },
   });
 
   server.ext('onPreResponse', (request, h) => {
-    // mendapatkan konteks response dari request
     const { response } = request;
 
     if (response instanceof Error) {
-      // penanganan client error secara internal.
       if (response instanceof ClientError) {
         const newResponse = h.response({
           status: 'fail',
           message: response.message,
         });
         newResponse.code(response.statusCode);
+        if (response.statusCode === 404) return newResponse;
         return newResponse;
       }
 
-      // penanganan server error sesuai kebutuhan
+      if (!response.isServer) {
+        return h.continue;
+      }
+
       const newResponse = h.response({
         status: 'error',
         message: 'Maaf, terjadi kegagalan pada server kami.',

@@ -1,21 +1,29 @@
-const mapDBToModel = ({
+/* eslint-disable camelcase */
+
+const mapDBToModelAlbum = ({
+  id,
+  name,
+  year,
+}) => ({
+  id,
+  name,
+  year,
+});
+
+const mapDBToModelSongs = ({
   id,
   title,
-  body,
-  tags,
-  // eslint-disable-next-line camelcase
-  created_at,
-  // eslint-disable-next-line camelcase
-  updated_at,
+  year,
+  performer,
+  genre,
+  duration,
 }) => ({
   id,
   title,
-  body,
-  tags,
-  // eslint-disable-next-line camelcase
-  createdAt: created_at,
-  // eslint-disable-next-line camelcase
-  updatedAt: updated_at,
+  year,
+  performer,
+  genre,
+  duration,
 });
 
-module.exports = { mapDBToModel };
+module.exports = { mapDBToModelAlbum, mapDBToModelSongs };
