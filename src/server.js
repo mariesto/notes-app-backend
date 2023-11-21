@@ -1,14 +1,43 @@
 require('dotenv').config();
 const Hapi = require('@hapi/hapi');
-const handler = require('./api/handler');
+const Jwt = require('@hapi/jwt');
+const handler = require('./api');
 const PayloadValidator = require('./validator');
 const ClientError = require('./exceptions/ClientError');
-const AlbumService = require('./services/postgres/album_service');
-const SongService = require('./services/postgres/song_service');
+const AlbumService = require('./services/album_service');
+const SongService = require('./services/song_service');
+const UserService = require('./services/user_service');
+const AuthenticationService = require('./services/authentication_service');
+const TokenManager = require('./tokenize/token_manager');
+const PlayListService = require('./services/playlist_service');
+const CollaborationService = require('./services/collaboration_service');
 
-const init = async () => {
+function registerServices() {
   const albumService = new AlbumService();
   const songService = new SongService();
+  const userService = new UserService();
+  const authenticationService = new AuthenticationService();
+  const collaborationService = new CollaborationService();
+  const playListService = new PlayListService(collaborationService);
+  return {
+    albumService,
+    songService,
+    userService,
+    playListService,
+    collaborationService,
+    authenticationService,
+  };
+}
+
+const init = async () => {
+  const {
+    albumService,
+    songService,
+    userService,
+    playListService,
+    collaborationService,
+    authenticationService,
+  } = registerServices();
 
   const server = Hapi.server({
     port: process.env.PORT,
@@ -22,10 +51,35 @@ const init = async () => {
   });
 
   await server.register({
+    plugin: Jwt,
+  });
+
+  server.auth.strategy('open-music-app_jwt', 'jwt', {
+    keys: process.env.ACCESS_TOKEN_KEY,
+    verify: {
+      aud: false,
+      iss: false,
+      sub: false,
+      maxAgeSec: process.env.ACCESS_TOKEN_AGE,
+    },
+    validate: (artifacts) => ({
+      isValid: true,
+      credentials: {
+        id: artifacts.decoded.payload.id,
+      },
+    }),
+  });
+
+  await server.register({
     plugin: handler,
     options: {
       albumService,
       songService,
+      userService,
+      authenticationService,
+      playListService,
+      collaborationService,
+      tokenManager: TokenManager,
       validator: PayloadValidator,
     },
   });

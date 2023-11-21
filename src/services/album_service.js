@@ -1,11 +1,12 @@
 const { nanoid } = require('nanoid');
-const { Pool } = require('pg');
-const NotFoundError = require('../../exceptions/NotFoundError');
-const ClientError = require('../../exceptions/ClientError');
+
+const NotFoundError = require('../exceptions/NotFoundError');
+const ClientError = require('../exceptions/ClientError');
+const DatabasePool = require('../database/database_pool');
 
 class AlbumService {
   constructor() {
-    this._pool = new Pool();
+    this._pool = new DatabasePool();
   }
 
   async createNewAlbum({
@@ -18,7 +19,7 @@ class AlbumService {
       values: [id, name, year],
     };
 
-    const result = await this._pool.query(query);
+    const result = await this._pool.executeQuery(query);
 
     if (!result.rows[0].id) {
       throw new ClientError('Album failed to create');
@@ -32,7 +33,7 @@ class AlbumService {
       text: 'SELECT id, name, year FROM albums WHERE id = $1',
       values: [id],
     };
-    const result = await this._pool.query(query);
+    const result = await this._pool.executeQuery(query);
 
     if (!result.rows.length) {
       throw new NotFoundError('Album not found');
@@ -41,12 +42,12 @@ class AlbumService {
     const fetchedAlbum = result.rows[0];
 
     const querySong = {
-      text: 'SELECT id, title, performer FROM songs WHERE album_id = $1',
+      text: 'SELECT id, title, performer FROM songs WHERE "albumId" = $1',
       values: [fetchedAlbum.id],
     };
 
     fetchedAlbum.songs = [];
-    const albumSongs = await this._pool.query(querySong);
+    const albumSongs = await this._pool.executeQuery(querySong);
     if (albumSongs.rowCount) {
       // eslint-disable-next-line prefer-spread
       fetchedAlbum.songs.push.apply(fetchedAlbum.songs, albumSongs.rows);
@@ -64,7 +65,7 @@ class AlbumService {
       values: [name, year, id],
     };
 
-    const result = await this._pool.query(query);
+    const result = await this._pool.executeQuery(query);
 
     if (!result.rows.length) {
       throw new NotFoundError('Failed to update album. Id not found');
@@ -77,7 +78,7 @@ class AlbumService {
       values: [id],
     };
 
-    const result = await this._pool.query(query);
+    const result = await this._pool.executeQuery(query);
 
     if (!result.rows.length) {
       throw new NotFoundError('Album failed to delete. Id not found.');

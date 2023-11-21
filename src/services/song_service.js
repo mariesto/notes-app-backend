@@ -1,10 +1,9 @@
 const { nanoid } = require('nanoid');
-// const { Pool } = require('pg');
 const {
   mapDBToModelSongs,
-} = require('../../utils/util');
-const NotFoundError = require('../../exceptions/NotFoundError');
-const DatabasePool = require('../../database/database_pool');
+} = require('../utils/util');
+const NotFoundError = require('../exceptions/NotFoundError');
+const DatabasePool = require('../database/database_pool');
 
 class SongService {
   constructor() {
@@ -31,7 +30,6 @@ class SongService {
   }
 
   async getSongs(title, performer) {
-    console.log(`get songs request : ${title}, ${performer}`);
     const query = {
       text: 'SELECT id, title, performer FROM songs WHERE title ILIKE $1 operator performer ILIKE $2',
       values: [`%${title}%`, `%${performer}%`],
@@ -75,7 +73,7 @@ class SongService {
     albumId,
   }) {
     const query = {
-      text: 'UPDATE songs SET title = $1, year = $2, performer = $3, genre = $4, duration = $5, "album_id" = $6 WHERE id = $7 RETURNING *',
+      text: 'UPDATE songs SET title = $1, year = $2, performer = $3, genre = $4, duration = $5, "albumId" = $6 WHERE id = $7 RETURNING *',
       values: [title, year, performer, genre, duration, albumId, id],
     };
 
@@ -98,6 +96,18 @@ class SongService {
     if (!result.rows.length) {
       throw new NotFoundError('Song failed to delete. Id not found');
     }
+  }
+
+  async getSongsByPlaylist(playlistId) {
+    const query = {
+      text: `SELECT songs.id, songs.title, songs.performer FROM songs
+        LEFT JOIN playlist_songs ON playlist_songs."songId" = songs.id
+        WHERE playlist_songs."playlistId" = $1`,
+      values: [playlistId],
+    };
+
+    const result = await this._pool.executeQuery(query);
+    return result.rows.map(mapDBToModelSongs);
   }
 }
 
