@@ -2,7 +2,12 @@ const { Pool } = require('pg');
 
 class DatabasePool {
   constructor() {
-    this._pool = new Pool();
+    if (!DatabasePool.instance) {
+      this._pool = new Pool();
+      DatabasePool.instance = this;
+    }
+    // eslint-disable-next-line no-constructor-return
+    return DatabasePool.instance;
   }
 
   async executeQuery(query) {

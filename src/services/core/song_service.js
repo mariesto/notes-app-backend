@@ -1,12 +1,13 @@
 const { nanoid } = require('nanoid');
 const {
   mapDBToModelSongs,
-} = require('../utils/util');
-const NotFoundError = require('../exceptions/NotFoundError');
-const DatabasePool = require('../database/database_pool');
+} = require('../../utils/util');
+const NotFoundError = require('../../exceptions/NotFoundError');
+const DatabasePool = require('../../database/database_pool');
 
 class SongService {
-  constructor() {
+  constructor(redisService) {
+    this._redisService = redisService;
     this._pool = new DatabasePool();
   }
 
@@ -108,6 +109,25 @@ class SongService {
 
     const result = await this._pool.executeQuery(query);
     return result.rows.map(mapDBToModelSongs);
+  }
+
+  async getSongsByAlbumId(albumId) {
+    try {
+      const result = await this._redisService.get(`album_songs:${albumId}`);
+      return JSON.parse(result);
+    } catch (error) {
+      const query = {
+        text: 'SELECT id, title, performer FROM songs WHERE "albumId" = $1',
+        values: [albumId],
+      };
+
+      const result = await this._pool.executeQuery(query);
+      const mappedResult = result.rows.map(mapDBToModelSongs);
+
+      await this._redisService.set(`album_songs:${albumId}`, JSON.stringify(mappedResult));
+
+      return mappedResult;
+    }
   }
 }
 

@@ -1,6 +1,6 @@
 const { nanoid } = require('nanoid');
-const DatabasePool = require('../database/database_pool');
-const InvariantError = require('../exceptions/InvariantError');
+const DatabasePool = require('../../database/database_pool');
+const InvariantError = require('../../exceptions/InvariantError');
 
 class CollaborationService {
   constructor() {

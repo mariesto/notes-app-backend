@@ -1,9 +1,9 @@
 const autoBind = require('auto-bind');
 
 class PlayListHandler {
-  constructor(playlistsService, songsService, validator) {
-    this._playlistsService = playlistsService;
-    this._songsService = songsService;
+  constructor(playlistService, songService, validator) {
+    this._playlistService = playlistService;
+    this._songService = songService;
     this._validator = validator;
 
     autoBind(this);
@@ -14,7 +14,7 @@ class PlayListHandler {
     const { name = 'untitled' } = request.payload;
     const { id: username } = request.auth.credentials;
 
-    const playlistId = await this._playlistsService.addPlaylist({
+    const playlistId = await this._playlistService.addPlaylist({
       name,
       username,
     });
@@ -33,7 +33,7 @@ class PlayListHandler {
 
   async getPlaylistsHandler(request) {
     const { id: username } = request.auth.credentials;
-    const playlists = await this._playlistsService.getPlaylists(username);
+    const playlists = await this._playlistService.getPlaylists(username);
 
     return {
       status: 'success',
@@ -47,8 +47,8 @@ class PlayListHandler {
     const { id } = request.params;
     const { id: username } = request.auth.credentials;
 
-    await this._playlistsService.verifyPlaylistOwner(id, username);
-    await this._playlistsService.deletePlaylistById(id);
+    await this._playlistService.verifyPlaylistOwner(id, username);
+    await this._playlistService.deletePlaylistById(id);
 
     return {
       status: 'success',
@@ -62,10 +62,10 @@ class PlayListHandler {
     const { songId } = request.payload;
     const { id: userId } = request.auth.credentials;
 
-    await this._songsService.getSongById(songId);
-    await this._playlistsService.verifyPlaylistAccess(playlistId, userId);
-    await this._playlistsService.addSongToPlaylist(playlistId, songId);
-    await this._playlistsService.addPlaylistActivities(playlistId, songId, userId, 'add');
+    await this._songService.getSongById(songId);
+    await this._playlistService.verifyPlaylistAccess(playlistId, userId);
+    await this._playlistService.addSongToPlaylist(playlistId, songId);
+    await this._playlistService.addPlaylistActivities(playlistId, songId, userId, 'add');
     const response = h.response({
       status: 'success',
       message: 'Added song to the playlist',
@@ -78,9 +78,9 @@ class PlayListHandler {
     const { id: playlistId } = request.params;
     const { id: userId } = request.auth.credentials;
 
-    await this._playlistsService.verifyPlaylistAccess(playlistId, userId);
-    const playlists = await this._playlistsService.getPlaylistById(playlistId);
-    playlists.songs = await this._songsService.getSongsByPlaylist(playlistId);
+    await this._playlistService.verifyPlaylistAccess(playlistId, userId);
+    const playlists = await this._playlistService.getPlaylistById(playlistId);
+    playlists.songs = await this._songService.getSongsByPlaylist(playlistId);
 
     return {
       status: 'success',
@@ -95,9 +95,9 @@ class PlayListHandler {
     const { songId } = request.payload;
     const { id: userId } = request.auth.credentials;
 
-    await this._playlistsService.verifyPlaylistAccess(playlistId, userId);
-    await this._playlistsService.deleteSongFromPlaylist(playlistId, songId);
-    await this._playlistsService.addPlaylistActivities(playlistId, songId, userId, 'delete');
+    await this._playlistService.verifyPlaylistAccess(playlistId, userId);
+    await this._playlistService.deleteSongFromPlaylist(playlistId, songId);
+    await this._playlistService.addPlaylistActivities(playlistId, songId, userId, 'delete');
 
     return {
       status: 'success',
@@ -109,8 +109,8 @@ class PlayListHandler {
     const { id: playlistId } = request.params;
     const { id: userId } = request.auth.credentials;
 
-    await this._playlistsService.verifyPlaylistAccess(playlistId, userId);
-    const activities = await this._playlistsService.getPlaylistActivities(playlistId);
+    await this._playlistService.verifyPlaylistAccess(playlistId, userId);
+    const activities = await this._playlistService.getPlaylistActivities(playlistId);
 
     return {
       status: 'success',

@@ -59,7 +59,13 @@ const CollaborationPayloadSchema = Joi.object({
   userId: Joi.string().required(),
 });
 
-module.exports = { CollaborationPayloadSchema };
+const ExportPlaylistPayloadSchema = Joi.object({
+  targetEmail: Joi.string().email({ tlds: true }).required(),
+});
+
+const ImageHeadersSchema = Joi.object({
+  'content-type': Joi.string().valid('image/apng', 'image/avif', 'image/gif', 'image/jpeg', 'image/png', 'image/svg+xml', 'image/webp').required(),
+}).unknown();
 
 module.exports = {
   AlbumPayloadSchema,
@@ -71,4 +77,6 @@ module.exports = {
   PostPlaylistPayloadSchema,
   PostSongToPlaylistPayloadSchema,
   CollaborationPayloadSchema,
+  ExportPlaylistPayloadSchema,
+  ImageHeadersSchema,
 };

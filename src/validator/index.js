@@ -9,6 +9,8 @@ const {
   PostPlaylistPayloadSchema,
   PostSongToPlaylistPayloadSchema,
   CollaborationPayloadSchema,
+  ImageHeadersSchema,
+  ExportPlaylistPayloadSchema,
 } = require('./schema');
 const ClientError = require('../exceptions/ClientError');
 const InvariantError = require('../exceptions/InvariantError');
@@ -73,6 +75,21 @@ const PayloadValidator = {
 
   validateCollaborationPayload: (payload) => {
     const validationResult = CollaborationPayloadSchema.validate(payload);
+    if (validationResult.error) {
+      throw new InvariantError(validationResult.error.message);
+    }
+  },
+
+  validateExportPlaylistPayload: (payload) => {
+    const validationResult = ExportPlaylistPayloadSchema.validate(payload);
+
+    if (validationResult.error) {
+      throw new InvariantError(validationResult.error.message);
+    }
+  },
+
+  validateImageHeaders: (headers) => {
+    const validationResult = ImageHeadersSchema.validate(headers);
     if (validationResult.error) {
       throw new InvariantError(validationResult.error.message);
     }

@@ -1,20 +1,26 @@
 require('dotenv').config();
 const Hapi = require('@hapi/hapi');
 const Jwt = require('@hapi/jwt');
+const Inert = require('@hapi/inert');
+const { resolve } = require('path');
 const handler = require('./api');
 const PayloadValidator = require('./validator');
 const ClientError = require('./exceptions/ClientError');
-const AlbumService = require('./services/album_service');
-const SongService = require('./services/song_service');
-const UserService = require('./services/user_service');
-const AuthenticationService = require('./services/authentication_service');
+const AlbumService = require('./services/core/album_service');
+const SongService = require('./services/core/song_service');
+const UserService = require('./services/core/user_service');
+const AuthenticationService = require('./services/core/authentication_service');
 const TokenManager = require('./tokenize/token_manager');
-const PlayListService = require('./services/playlist_service');
-const CollaborationService = require('./services/collaboration_service');
+const PlayListService = require('./services/core/playlist_service');
+const CollaborationService = require('./services/core/collaboration_service');
+const RedisService = require('./services/cache/redis_service');
+const StorageService = require('./services/core/storage_service');
 
 function registerServices() {
-  const albumService = new AlbumService();
-  const songService = new SongService();
+  const redisService = new RedisService();
+  const storageService = new StorageService(resolve(__dirname, 'assets'));
+  const albumService = new AlbumService(redisService);
+  const songService = new SongService(redisService);
   const userService = new UserService();
   const authenticationService = new AuthenticationService();
   const collaborationService = new CollaborationService();
@@ -26,6 +32,7 @@ function registerServices() {
     playListService,
     collaborationService,
     authenticationService,
+    storageService,
   };
 }
 
@@ -37,6 +44,7 @@ const init = async () => {
     playListService,
     collaborationService,
     authenticationService,
+    storageService,
   } = registerServices();
 
   const server = Hapi.server({
@@ -50,9 +58,14 @@ const init = async () => {
     debug: { request: ['error'] },
   });
 
-  await server.register({
-    plugin: Jwt,
-  });
+  await server.register([
+    {
+      plugin: Jwt,
+    },
+    {
+      plugin: Inert,
+    },
+  ]);
 
   server.auth.strategy('open-music-app_jwt', 'jwt', {
     keys: process.env.ACCESS_TOKEN_KEY,
@@ -79,6 +92,7 @@ const init = async () => {
       authenticationService,
       playListService,
       collaborationService,
+      storageService,
       tokenManager: TokenManager,
       validator: PayloadValidator,
     },

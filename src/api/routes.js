@@ -1,5 +1,15 @@
 /* eslint-disable max-len */
-const routes = ([albumHandler, songHandler, userHandler, playListHandler, collaborationHandler, authenticationHandler]) => [
+const path = require('path');
+
+const routes = ([
+  albumHandler,
+  songHandler,
+  userHandler,
+  playListHandler,
+  collaborationHandler,
+  exportHandler,
+  authenticationHandler,
+]) => [
   // albums
   {
     method: 'POST',
@@ -20,6 +30,49 @@ const routes = ([albumHandler, songHandler, userHandler, playListHandler, collab
     method: 'DELETE',
     path: '/albums/{id}',
     handler: (request) => albumHandler.deleteAlbumByIdHandler(request),
+  },
+  {
+    method: 'POST',
+    path: '/albums/{id}/likes',
+    handler: (request, h) => albumHandler.postAlbumLikesHandler(request, h),
+    options: {
+      auth: 'open-music-app_jwt',
+    },
+  },
+  {
+    method: 'GET',
+    path: '/albums/{id}/likes',
+    handler: (request, h) => albumHandler.getAlbumLikesHandler(request, h),
+  },
+  {
+    method: 'DELETE',
+    path: '/albums/{id}/likes',
+    handler: (request) => albumHandler.deleteAlbumLikesHandler(request),
+    options: {
+      auth: 'open-music-app_jwt',
+    },
+  },
+  {
+    method: 'POST',
+    path: '/albums/{id}/covers',
+    handler: (request, h) => albumHandler.postUploadCoverAlbumHandler(request, h),
+    options: {
+      payload: {
+        allow: 'multipart/form-data',
+        multipart: true,
+        output: 'stream',
+        maxBytes: 512000,
+      },
+    },
+  },
+  {
+    method: 'GET',
+    path: '/albums/{id}/covers/{param*}',
+    handler: {
+      directory: {
+        path: path.resolve(__dirname, 'file/cover'),
+      },
+    },
   },
 
   // songs
@@ -147,6 +200,16 @@ const routes = ([albumHandler, songHandler, userHandler, playListHandler, collab
     method: 'DELETE',
     path: '/collaborations',
     handler: (request) => collaborationHandler.deleteCollaborationHandler(request),
+    options: {
+      auth: 'open-music-app_jwt',
+    },
+  },
+
+  // exports
+  {
+    method: 'POST',
+    path: '/export/playlists/{playlistId}',
+    handler: (request, h) => exportHandler.postExportHandler(request, h),
     options: {
       auth: 'open-music-app_jwt',
     },

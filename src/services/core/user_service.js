@@ -2,11 +2,11 @@ const { nanoid } = require('nanoid');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const { hash } = require('bcrypt');
 const bcrypt = require('bcrypt');
-const DatabasePool = require('../database/database_pool');
-const InvariantError = require('../exceptions/InvariantError');
-const ClientError = require('../exceptions/ClientError');
-const NotFoundError = require('../exceptions/NotFoundError');
-const AuthenticationError = require('../exceptions/AuthenticationError');
+const DatabasePool = require('../../database/database_pool');
+const InvariantError = require('../../exceptions/InvariantError');
+const ClientError = require('../../exceptions/ClientError');
+const NotFoundError = require('../../exceptions/NotFoundError');
+const AuthenticationError = require('../../exceptions/AuthenticationError');
 
 class UserService {
   constructor() {

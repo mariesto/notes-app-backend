@@ -1,8 +1,8 @@
 const { nanoid } = require('nanoid');
-const DatabasePool = require('../database/database_pool');
-const InvariantError = require('../exceptions/InvariantError');
-const NotFoundError = require('../exceptions/NotFoundError');
-const AuthorizationError = require('../exceptions/AuthorizationError');
+const DatabasePool = require('../../database/database_pool');
+const InvariantError = require('../../exceptions/InvariantError');
+const NotFoundError = require('../../exceptions/NotFoundError');
+const AuthorizationError = require('../../exceptions/AuthorizationError');
 
 class PlayListService {
   constructor(collaborationService) {
